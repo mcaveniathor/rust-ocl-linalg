@@ -1,7 +1,10 @@
-before_install:
-  - sudo apt update
-  - sudo apt install libpocl2 libpocl-dev pocl-opencl-icd
 language: rust
+dist: bionic
+os:
+  - linux
+apt:
+  packages:
+    - pocl-opencl-icd
 rust:
   - stable
   - beta
