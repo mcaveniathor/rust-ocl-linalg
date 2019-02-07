@@ -1,6 +1,6 @@
 before_install:
   - sudo apt update
-  - sudo apt install beignet-opencl-icd opencl-headers
+  - sudo apt install libpocl2 libpocl-dev pocl-opencl-icd
 language: rust
 rust:
   - stable
