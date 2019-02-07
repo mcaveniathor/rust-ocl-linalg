@@ -1,0 +1,10 @@
+[package]
+name = "rust-ocl-linalg"
+version = "0.1.0"
+authors = ["Thor McAvenia <mcaveniathor@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+ocl = "0.19"
+lazy_static = "1.2.0"
+num = "0.2.0"
