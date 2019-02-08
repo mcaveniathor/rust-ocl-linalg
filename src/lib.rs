@@ -119,4 +119,30 @@ mod tests {
         assert_eq!(m2, MATRIX_3_2.clone() - m);
     }
 
+    #[test]
+    fn test_matrix_diagonal() {
+        let m = Matrix::new_from_flat_vec(3, 3, vec![1, 0, 0, 0, 2, 0, 0, 0, 3]);
+        assert_eq!(m, Matrix::diagonal(3, vec![1, 2, 3]));
+    }
+
+    #[test]
+    fn test_matrix_set_value_at() {
+        let mut m: Matrix<i32> = Matrix::zero(3, 3);
+        m.set_value_at(2, 2, 1);
+        assert_eq!(m.value_at(2, 2), 1);
+    }
+
+    #[test]
+    fn test_matrix_swap_rows() {
+        let mut m: Matrix<i32> = Matrix::identity(2);
+        let m2: Matrix<i32> = Matrix::new_from_flat_vec(2, 2, vec![0, 1, 1, 0]);
+        m.swap_rows(0, 1);
+        assert_eq!(m2, m);
+    }
+
+    #[test]
+    fn test_matrix_row_echelon() {
+        let mut m: Matrix<f32> = Matrix::new_from_flat_vec(3, 3, vec![2.0, 4.0, 1.0, 6.0, 27.0, 0.0, 9.0, 12.0, 13.0]);
+    }
+
 }

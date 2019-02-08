@@ -1,8 +1,8 @@
 language: rust
-dist: bionic
+dist: trusty
 before_install:
   - sudo apt update
-  - sudo apt install pocl-opencl-icd
+  - sudo apt install pocl
 os:
   - linux
 apt:

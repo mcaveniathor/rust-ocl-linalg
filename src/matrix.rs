@@ -1,4 +1,5 @@
 use crate::util::Scalar;
+use num::abs;
 use std::fmt;
 use std::fmt::Write;
 use std::ops;
@@ -20,6 +21,7 @@ impl<T: Scalar> Matrix<T> {
             data: vec![T::from(0); m_in * n_in],
         }
     }
+
     /// Returns a new identity matrix with the provided dimensions.
     pub fn identity(m_in: usize) -> Matrix<T> {
         let mut d = Vec::with_capacity(m_in * m_in);
@@ -38,6 +40,31 @@ impl<T: Scalar> Matrix<T> {
             data: d,
         }
     }
+
+    /// Returns a new diagonal matrix with the given values along the main diagonal
+    pub fn diagonal(m_in: usize, diag: Vec<T>) -> Matrix<T> {
+        assert_eq!(m_in, diag.len());
+        let mut d: Vec<T> = Vec::with_capacity(m_in * m_in);
+        let mut i = diag.iter();
+        for r in 0..m_in {
+            for c in 0..m_in {
+                if r == c {
+                    match i.next() {
+                        Some(t) => d.push(*t),
+                        None => panic!("Error: Expected {} entries, found {}", m_in, r - 1),
+                    }
+                } else {
+                    d.push(T::from(0));
+                }
+            }
+        }
+        Matrix {
+            m: m_in,
+            n: m_in,
+            data: d,
+        }
+    }
+
     /// Returns a new matrix with the given dimensions given a flattened(1 dimensional) input vector.
     pub fn new_from_flat_vec(m_in: usize, n_in: usize, data_in: Vec<T>) -> Matrix<T> {
         assert!(data_in.len() == m_in * n_in);
@@ -47,6 +74,7 @@ impl<T: Scalar> Matrix<T> {
             data: data_in,
         }
     }
+
     /// Returns a new matrix with the given dimensions from a 2d input vector
     pub fn new_from_2d_vec(m_in: usize, n_in: usize, data_in: Vec<Vec<T>>) -> Matrix<T> {
         assert!(data_in.len() == m_in && data_in[0].len() == n_in);
@@ -62,10 +90,12 @@ impl<T: Scalar> Matrix<T> {
             data: d,
         }
     }
+
     /// Returns the dimensions of the matrix as a tuple.
     pub fn dimensions(&self) -> (usize, usize) {
         (self.m, self.n)
     }
+
     /// Returns the specified row of the matrix as a 1xN matrix (row vector).
     pub fn row(&self, r: usize) -> Matrix<T> {
         assert!(r < self.m);
@@ -75,6 +105,7 @@ impl<T: Scalar> Matrix<T> {
             data: (self.data[(r * self.n)..((r + 1) * self.n)]).to_vec(),
         }
     }
+
     /// Returns the specified column of the matrix as an M*1 matrix (column vector)
     pub fn col(&self, c: usize) -> Matrix<T> {
         assert!(c < self.n);
@@ -88,11 +119,18 @@ impl<T: Scalar> Matrix<T> {
             data: d,
         }
     }
+
     /// Returns the value of the r-th row and i-th column of the matrix
     pub fn value_at(&self, r: usize, c: usize) -> T {
         assert!(r < self.m && c < self.n);
         self.data[r * self.n + c]
     }
+
+    /// Set the value of a given entry in the matrix
+    pub fn set_value_at(&mut self, r:usize, c: usize, val: T) {
+        self.data[r*self.n + c] = val;
+    }
+
     /// Returns the submatrix bounded by r_min, c_min, r_max, and c_max
     pub fn submatrix(&self, r_min: usize, c_min: usize, r_max: usize, c_max: usize) -> Matrix<T> {
         assert!(r_max < self.m && c_max < self.n && r_min <= r_max && c_min <= c_max);
@@ -108,6 +146,7 @@ impl<T: Scalar> Matrix<T> {
             data: d,
         }
     }
+
     /// Recursively compute the determinant of the matrix.
     pub fn determinant(&self) -> T {
         assert!(self.is_square());
@@ -152,6 +191,46 @@ impl<T: Scalar> Matrix<T> {
     /// Return whether or not the matrix is invertible.
     pub fn is_invertible(&self) -> bool {
         self.determinant() == T::from(0)
+    }
+
+    /// Swap the specified two rows in the matrix
+    pub fn swap_rows(&mut self, r1: usize, r2: usize) {
+        assert!(r1 < self.m && r2 < self.m);
+        for i in 0 .. self.n {
+            let tmp = self.value_at(r1, i);
+            self.set_value_at(r1, i, self.value_at(r2,i));
+            self.set_value_at(r2, i, tmp);
+        }
+    }
+
+    /// converts the matrix to row-echelon form using Gaussian elimination
+    pub fn row_echelon(&mut self) {
+        for r in 0..self.m {
+            for mut c in 0..self.n {
+                //  pick the pivot with the highest absolute value to minimize rounding errors with floating point types
+                let mut max_pivot: T = T::from(0);
+                let mut max_row = 0;
+                for r2 in r..self.m {
+                    if abs(self.value_at(r2, c)) > max_pivot {
+                        max_pivot = self.value_at(r2, c);
+                        max_row = r2;
+                    }
+                }
+                if max_pivot == T::from(0) {
+                    c += 1; // no pivot found in this column
+                }
+                else {
+                    self.swap_rows(r, max_row);
+                    for i in r+1 ..self.m {
+                        let f = self.value_at(i, c) / self.value_at(r, c); // this might introduce some issues with integer arithmetic. will have to sort that out
+                        self.set_value_at(i, c, T::from(0));
+                        for j in c + 1 .. self.n {
+                            self.set_value_at(i, j, self.value_at(i, j) - self.value_at(r, j) * f);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
